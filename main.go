@@ -3,11 +3,11 @@ package main
 import (
 	"appengine"
 	"appengine/urlfetch"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/pat"
 	lytics "github.com/lytics/go-lytics"
-	sp "github.com/SparkPost/gosparkpost"
 	"net/http"
 	"strconv"
 	"time"
@@ -24,11 +24,11 @@ type SegmentEvent struct {
 
 func init() {
 	router := pat.New()
-	router.Post("/post", http.HandlerFunc(webhookToSparkpost))
+	router.Post("/post", http.HandlerFunc(enrichWebhook))
 	http.HandleFunc("/", router.ServeHTTP)
 }
 
-func webhookToSparkpost(w http.ResponseWriter, r *http.Request) {
+func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	client := urlfetch.Client(ctx)
 
@@ -41,14 +41,14 @@ func webhookToSparkpost(w http.ResponseWriter, r *http.Request) {
 	evt := &SegmentEvent{}
 	if err := json.NewDecoder(r.Body).Decode(evt); err != nil {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "unrecognized webhook body", nil))
+		fmt.Fprintf(w, buildResponse(500, "unrecognized webhook body"))
 		return
 	}
 
 	// email should exist
 	if _, ok := evt.Properties["email"]; !ok {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "user does not have email", nil))
+		fmt.Fprintf(w, buildResponse(500, "user does not have email"))
 		return
 	}
 
@@ -63,61 +63,57 @@ func webhookToSparkpost(w http.ResponseWriter, r *http.Request) {
 	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), recommendationFilter, 1, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user", nil))
+		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user"))
 		return
 	}
 
-	recc := recs[0]
-
-	// send data to sparkpost to format and send email
-	spCfg := &sp.Config {
-		BaseUrl: "https://api.sparkpost.com",
-		ApiKey: sparkpostAPIKey,
-		ApiVersion: 1,
-	}
-
-	spClient := sp.Client{}
-	if err := spClient.Init(spCfg); err != nil {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "invalid sparkpost credentials", nil))
-		return
-	}
-
-	spClient.Client = client
-
-	msg := &sp.Transmission {
-		Recipients: []string{evt.Properties["email"].(string)},
-		SubstitutionData: map[string]interface{}{
-			"url": recc.Url,
-			"title": recc.Title,
+	// Format your webhook however you like with our data this
+	// example formulates a webhook which will send an email using sparkpost
+	payload := map[string]interface{}{
+		"recipients": []map[string]interface{}{
+			map[string]interface{}{
+				"address": evt.Properties["email"].(string),
+				"substitution_data": map[string]interface{}{
+					"data": recs[0],
+				},
+			},
 		},
-		Content: map[string]string {
+		"content": map[string]string{
 			"template_id": sparkpostTemplateId,
 		},
 	}
 
 	hourly, ok := evt.Properties["hourly"].(map[string]interface{})
 
-	if ok && sendAtOptimalHour {
+	if ok && getOptimalHour {
 		if sendTime := getOptimalSendTime(hourly); sendTime != nil {
-			msg.Options = &sp.TxOptions {
-				StartTime: sendTime.Format(time.RFC3339),
+			payload["options"] = map[string]interface{}{
+				"start_time": sendTime.Format(time.RFC3339),
 			}
 		}
 	}
 
-	id, _, err := spClient.Send(msg)
+	reqBody, err := json.Marshal(payload)
 	if err != nil {
 		w.WriteHeader(500)
-		ctx.Infof("%s", err)
-		fmt.Fprintf(w, buildResponse(500, "failed to send to sparkpost", nil))
+		fmt.Fprintf(w, buildResponse(500, "invalid outgoing webhook body"))
+		return
+	}
+
+	req, err := http.NewRequest("POST", webhookUrl, bytes.NewReader(reqBody))
+	req.Header.Set("Authorization", sparkpostAPIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	if err != nil || res.StatusCode != 200 {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, buildResponse(500, "could not send send webhook"))
 		return
 	}
 
 	w.WriteHeader(200)
-	fmt.Fprintf(w, buildResponse(200, "success", id))
+	fmt.Fprintf(w, buildResponse(200, "success"))
 }
-
 
 func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 	var (
@@ -139,21 +135,18 @@ func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 	if optimalHour == now.Hour() {
 		// send now
 		return nil
-	} else if date.After(now) {
-		// send today at optimalHour today
-		return &date
+	} else if date.Before(now) {
+		// send tomorrow at optimal hour
+		date = date.AddDate(0, 0, 1)
 	}
 
-	// send tomorrow at optimal hour
-	date = date.AddDate(0, 0, 1)
 	return &date
 }
 
-func buildResponse(status int, msg, id interface{}) string {
+func buildResponse(status int, msg string) string {
 	output := map[string]interface{}{
 		"status": status,
 		"message": msg,
-		"id": id,
 	}
 
 	resp, _ := json.Marshal(output)
