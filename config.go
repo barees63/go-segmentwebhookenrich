@@ -8,18 +8,19 @@ type Config struct {
 
 	// optional
 	recommendationFilter string
-	event                *event
+	event                *Event
 	sparkpostTemplateId  string
 	sparkpostAPIKey      string
 }
 
-type event struct {
+type Event struct {
 	name string
 	segment string
 }
 
 var (
 	config = Config {
+
 		// Lytics API Key 
 		// Found in the "Manage Accounts" page in Lytics
 		lyticsAPIKey: "LYTICS API KEY",
@@ -40,7 +41,8 @@ var (
 
 		// Filtering for which events to process.
 		// If you want to accept every event that comes through, do not set this field.
-		event: &event{
+		event: &Event{
+
 			// Name of event (segment_entered or segment_exited)
 			name: "segment_exited",
 

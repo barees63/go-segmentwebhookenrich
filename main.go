@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// Expected format of incoming webhook from Segment
 type SegmentEvent struct {
 	Version    int                    `json:"version,omitempty"`
 	Type       string                 `json:"type,omitempty"`
@@ -28,6 +29,11 @@ func init() {
 	http.HandleFunc("/", router.ServeHTTP)
 }
 
+// enrichWebhook accepts an incoming segment webhook event using
+// the Lytics + Segment integration format. It looks up content
+// recommendations for the user in the event, and sends this data
+// to a webhook. In this example, it sends a formatted webhook to
+// sparkpost to deploy which will email with the suggested content
 func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	client := urlfetch.Client(ctx)
@@ -36,7 +42,7 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", r.Method)
 
-	// we expect the body of the post request to be a segment
+	// We expect the body of the post request to be a segment
 	// track event containing lytics user data
 	evt := &SegmentEvent{}
 	if err := json.NewDecoder(r.Body).Decode(evt); err != nil {
@@ -45,16 +51,16 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if event matches the expectation
+	// Check if event matches the expectation
 	if config.event != nil {
-		// check if event name matches
+		// Check if event name matches
 		if config.event.name != "" && evt.EventName != config.event.name {
 			w.WriteHeader(204)
 			fmt.Fprintf(w, buildResponse(204, "not processed: event name did not match"))
 			return
 		}
 
-		// check if segment name matches
+		// Check if segment name matches
 		friendlyName, ok := evt.Properties["_audience_friendly"].(string)
 		if config.event.segment != "" && ok && friendlyName != config.event.segment {
 			w.WriteHeader(204)
@@ -63,14 +69,13 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// email should exist
+	// Email should exist
 	if _, ok := evt.Properties["email"]; !ok {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "user does not have email"))
 		return
 	}
 
-	// get recommended content for the user
 	ly := lytics.NewLytics(config.lyticsAPIKey, nil)
 	ly.SetClient(client)
 
@@ -78,6 +83,7 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		config.recommendationFilter += " FROM content"
 	}
 
+	// Get recommended content for the user
 	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), config.recommendationFilter, 1, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
@@ -86,7 +92,8 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Format your webhook however you like with our data this
-	// example formulates a webhook which will send an email using sparkpost
+	// example formulates a webhook which we send to sparkpost to
+	// deploy an email to this user
 	payload := map[string]interface{}{
 		"recipients": []map[string]interface{}{
 			map[string]interface{}{
@@ -101,8 +108,8 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	// Calculate the optimal time of day to send an email to this user
 	hourly, ok := evt.Properties["hourly"].(map[string]interface{})
-
 	if ok && config.getOptimalHour {
 		if sendTime := getOptimalSendTime(hourly); sendTime != nil {
 			payload["options"] = map[string]interface{}{
@@ -111,6 +118,7 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Send the payload data as a webhook
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
 		w.WriteHeader(500)
@@ -122,8 +130,9 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Authorization", config.sparkpostAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	res, err := client.Do(req)
-	if err != nil || res.StatusCode != 200 {
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil || resp.StatusCode != 200 {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "could not send send webhook"))
 		return
@@ -133,6 +142,9 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, buildResponse(200, "success"))
 }
 
+// getOptimalSendTime will look through the hourly data for the user
+// and find the highest activity hour of the day, it returns the 
+// next time it will be the optimal hour for the user
 func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 	var (
 		max int
@@ -151,10 +163,10 @@ func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 	date := time.Date(now.Year(), now.Month(), now.Day(), optimalHour, 0, 0, 0, time.UTC)
 
 	if optimalHour == now.Hour() {
-		// send now
+		// Send now
 		return nil
 	} else if date.Before(now) {
-		// send tomorrow at optimal hour
+		// Send tomorrow at optimal hour
 		date = date.AddDate(0, 0, 1)
 	}
 
