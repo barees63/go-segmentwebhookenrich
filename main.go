@@ -36,13 +36,31 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", r.Method)
 
-	// expect the body of the post request to be a segment
+	// we expect the body of the post request to be a segment
 	// track event containing lytics user data
 	evt := &SegmentEvent{}
 	if err := json.NewDecoder(r.Body).Decode(evt); err != nil {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "unrecognized webhook body"))
 		return
+	}
+
+	// check if event matches the expectation
+	if config.event != nil {
+		// check if event name matches
+		if config.event.name != "" && evt.EventName != config.event.name {
+			w.WriteHeader(204)
+			fmt.Fprintf(w, buildResponse(204, "not processed: event name did not match"))
+			return
+		}
+
+		// check if segment name matches
+		friendlyName, ok := evt.Properties["_audience_friendly"].(string)
+		if config.event.segment != "" && ok && friendlyName != config.event.segment {
+			w.WriteHeader(204)
+			fmt.Fprintf(w, buildResponse(204, "not processed: segment name did not match"))
+			return
+		}
 	}
 
 	// email should exist
@@ -53,14 +71,14 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get recommended content for the user
-	ly := lytics.NewLytics(lyticsAPIKey, nil)
+	ly := lytics.NewLytics(config.lyticsAPIKey, nil)
 	ly.SetClient(client)
 
-	if recommendationFilter != "" {
-		recommendationFilter += " FROM content"
+	if config.recommendationFilter != "" {
+		config.recommendationFilter += " FROM content"
 	}
 
-	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), recommendationFilter, 1, false)
+	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), config.recommendationFilter, 1, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user"))
@@ -79,13 +97,13 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"content": map[string]string{
-			"template_id": sparkpostTemplateId,
+			"template_id": config.sparkpostTemplateId,
 		},
 	}
 
 	hourly, ok := evt.Properties["hourly"].(map[string]interface{})
 
-	if ok && getOptimalHour {
+	if ok && config.getOptimalHour {
 		if sendTime := getOptimalSendTime(hourly); sendTime != nil {
 			payload["options"] = map[string]interface{}{
 				"start_time": sendTime.Format(time.RFC3339),
@@ -100,8 +118,8 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", webhookUrl, bytes.NewReader(reqBody))
-	req.Header.Set("Authorization", sparkpostAPIKey)
+	req, err := http.NewRequest("POST", config.webhookUrl, bytes.NewReader(reqBody))
+	req.Header.Set("Authorization", config.sparkpostAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := client.Do(req)
