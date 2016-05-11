@@ -23,7 +23,6 @@ type SegmentEvent struct {
 	Timestamp  time.Time              `json:"timestamp,omitempty"`
 }
 
-
 func init() {
 	router := pat.New()
 	router.Post("/post", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -147,11 +146,11 @@ func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appen
 }
 
 // getOptimalSendTime will look through the hourly data for the user
-// and find the highest activity hour of the day, it returns the 
+// and find the highest activity hour of the day, it returns the
 // next time it will be the optimal hour for the user
 func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 	var (
-		max int
+		max         int
 		optimalHour int
 	)
 
@@ -179,7 +178,7 @@ func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 
 func buildResponse(status int, msg string) string {
 	output := map[string]interface{}{
-		"status": status,
+		"status":  status,
 		"message": msg,
 	}
 

@@ -1,120 +1,120 @@
 {
-	"data": [
-		{
-			"url": "www.example.com/blog/post/1",
-			"title": "Title of Blog Post",
-			"description": "this is a mock blog post",
-			"topics": [
-				"test",
-				"example"
-			],
-			"topic_relevances": {
-				"test": 1,
-				"example": 0.6
-			},
-			"primary_image": "https://www.example.com/img/blog/1.png",
-			"author": "Sample Author",
-			"created": "2016-04-15T17:18:23.98415706Z",
-			"id": "0000000000001",
-			"stream": "default",
-			"path": [
-				"blog",
-				"blog/post",
-				"blog/post/1"
-			],
-			"aspects": [
-				"article"
-			],
-			"language": "en",
-			"updated": "2016-05-02T22:37:29.162332572Z",
-			"fetched": "2016-04-16T04:46:58.829776692Z",
-			"meta": [
-				"og:locale/en_us",
-				"og:site_name/example",
-				"og:title/title of blog post",
-				"og:type/website",
-				"og:url/http://www.example.com/blog/post/1"
-			],
-			"confidence": 0.8659317496709348,
-			"visited": false
-		},
-		{
-			"url": "www.example.com/blog/post/2",
-			"title": "Another Blog Post",
-			"description": "this is another mock blog post",
-			"topics": [
-				"test",
-				"example"
-			],
-			"topic_relevances": {
-				"test": 0.7,
-				"example": 0.8
-			},
-			"primary_image": "https://www.example.com/img/blog/2.png",
-			"author": "Sample Author2",
-			"created": "2016-04-15T17:18:23.98415706Z",
-			"id": "0000000000002",
-			"stream": "default",
-			"path": [
-				"blog",
-				"blog/post",
-				"blog/post/2"
-			],
-			"aspects": [
-				"article"
-			],
-			"language": "en",
-			"updated": "2016-05-02T22:37:29.162332572Z",
-			"fetched": "2016-04-16T04:46:58.829776692Z",
-			"meta": [
-				"og:locale/en_us",
-				"og:site_name/example",
-				"og:title/another blog post",
-				"og:type/website",
-				"og:url/http://www.example.com/blog/post/2"
-			],
-			"confidence": 0.8659317496709348,
-			"visited": false
-		},
-		{
-			"url": "www.example.com/blog/tagged/marketing",
-			"title": "Tagged as Marketing",
-			"description": "example blog",
-			"topics": [
-				"marketing",
-				"example"
-			],
-			"topic_relevances": {
-				"marketing": 1,
-				"example": 0.8
-			},
-			"primary_image": "https://www.example.com/img/blog.png",
-			"author": "",
-			"created": "2016-04-15T17:18:23.98415706Z",
-			"id": "0000000000003",
-			"stream": "default",
-			"path": [
-				"blog",
-				"blog/tagged",
-				"blog/tagged/marketing"
-			],
-			"aspects": [
-				"other"
-			],
-			"language": "en",
-			"updated": "2016-05-02T22:37:29.162332572Z",
-			"fetched": "2016-04-16T04:46:58.829776692Z",
-			"meta": [
-				"og:locale/en_us",
-				"og:site_name/example",
-				"og:title/tagged as marketing",
-				"og:type/website",
-				"og:url/http://www.example.com/blog/tagged/marketing"
-			],
-			"confidence": 0.8659317496709348,
-			"visited": false
-		}
-	],
-	"message": "success",
-	"status": 200
+  "data": [
+    {
+      "url": "www.example.com/blog/post/1",
+      "title": "Title of Blog Post",
+      "description": "this is a mock blog post",
+      "topics": [
+        "test",
+        "example"
+      ],
+      "topic_relevances": {
+        "test": 1,
+        "example": 0.6
+      },
+      "primary_image": "https://www.example.com/img/blog/1.png",
+      "author": "Sample Author",
+      "created": "2016-04-15T17:18:23.98415706Z",
+      "id": "0000000000001",
+      "stream": "default",
+      "path": [
+        "blog",
+        "blog/post",
+        "blog/post/1"
+      ],
+      "aspects": [
+        "article"
+      ],
+      "language": "en",
+      "updated": "2016-05-02T22:37:29.162332572Z",
+      "fetched": "2016-04-16T04:46:58.829776692Z",
+      "meta": [
+        "og:locale/en_us",
+        "og:site_name/example",
+        "og:title/title of blog post",
+        "og:type/website",
+        "og:url/http://www.example.com/blog/post/1"
+      ],
+      "confidence": 0.8659317496709348,
+      "visited": false
+    },
+    {
+      "url": "www.example.com/blog/post/2",
+      "title": "Another Blog Post",
+      "description": "this is another mock blog post",
+      "topics": [
+        "test",
+        "example"
+      ],
+      "topic_relevances": {
+        "test": 0.7,
+        "example": 0.8
+      },
+      "primary_image": "https://www.example.com/img/blog/2.png",
+      "author": "Sample Author2",
+      "created": "2016-04-15T17:18:23.98415706Z",
+      "id": "0000000000002",
+      "stream": "default",
+      "path": [
+        "blog",
+        "blog/post",
+        "blog/post/2"
+      ],
+      "aspects": [
+        "article"
+      ],
+      "language": "en",
+      "updated": "2016-05-02T22:37:29.162332572Z",
+      "fetched": "2016-04-16T04:46:58.829776692Z",
+      "meta": [
+        "og:locale/en_us",
+        "og:site_name/example",
+        "og:title/another blog post",
+        "og:type/website",
+        "og:url/http://www.example.com/blog/post/2"
+      ],
+      "confidence": 0.8659317496709348,
+      "visited": false
+    },
+    {
+      "url": "www.example.com/blog/tagged/marketing",
+      "title": "Tagged as Marketing",
+      "description": "example blog",
+      "topics": [
+        "marketing",
+        "example"
+      ],
+      "topic_relevances": {
+        "marketing": 1,
+        "example": 0.8
+      },
+      "primary_image": "https://www.example.com/img/blog.png",
+      "author": "",
+      "created": "2016-04-15T17:18:23.98415706Z",
+      "id": "0000000000003",
+      "stream": "default",
+      "path": [
+        "blog",
+        "blog/tagged",
+        "blog/tagged/marketing"
+      ],
+      "aspects": [
+        "other"
+      ],
+      "language": "en",
+      "updated": "2016-05-02T22:37:29.162332572Z",
+      "fetched": "2016-04-16T04:46:58.829776692Z",
+      "meta": [
+        "og:locale/en_us",
+        "og:site_name/example",
+        "og:title/tagged as marketing",
+        "og:type/website",
+        "og:url/http://www.example.com/blog/tagged/marketing"
+      ],
+      "confidence": 0.8659317496709348,
+      "visited": false
+    }
+  ],
+  "message": "success",
+  "status": 200
 }

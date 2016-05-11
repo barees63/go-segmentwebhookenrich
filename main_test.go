@@ -3,8 +3,8 @@ package main
 import (
 	"appengine"
 	"appengine/aetest"
-	"bytes"
 	"appengine/urlfetch"
+	"bytes"
 	"fmt"
 	"github.com/bmizerany/assert"
 	"github.com/jarcoal/httpmock"
@@ -15,16 +15,16 @@ import (
 
 var (
 	testConfig = &Config{
-		lyticsAPIKey: mockLyticsKey,
-		webhookUrl: "https://api.sparkpost.com/api/v1/transmissions",
-		getOptimalHour: true,
+		lyticsAPIKey:         mockLyticsKey,
+		webhookUrl:           "https://api.sparkpost.com/api/v1/transmissions",
+		getOptimalHour:       true,
 		recommendationFilter: mockFilter,
 		event: &Event{
-			name: "segment_entered",
+			name:    "segment_entered",
 			segment: "MockSegmentName",
 		},
 		sparkpostTemplateId: mockSpTemplate,
-		sparkpostAPIKey: mockSpKey,
+		sparkpostAPIKey:     mockSpKey,
 	}
 )
 
@@ -90,8 +90,8 @@ func TestEnrichWebhook(t *testing.T) {
 
 func TestGetOptimalSendTime(t *testing.T) {
 	hourly := map[string]interface{}{
-		"0": float64(583),
-		"1": float64(414),
+		"0":  float64(583),
+		"1":  float64(414),
 		"14": float64(1),
 		"17": float64(721),
 		"18": float64(1140),
@@ -108,7 +108,7 @@ func TestGetOptimalSendTime(t *testing.T) {
 		dur := sendTime.Sub(now)
 		assert.T(t, dur.Hours() < 24)
 
-	// current hour matches optimal
+		// current hour matches optimal
 	} else {
 		assert.Equal(t, sendTime, nil)
 	}
