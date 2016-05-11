@@ -10,20 +10,20 @@
   },
   "properties": {
     "_audience": "87a91423e5bd4996ca4cb36593f1dcf3",
-    "_audience_action": "entered",
-    "_audience_friendly": "sample_segment_name",
+    "_audience_action": "exited",
+    "_audience_friendly": "MockSegmentName",
     "channels": [
       "web"
     ],
     "city": "Vancouver",
     "country": "US",
     "created_ts": "2016-05-03T19:08:07.607Z",
-    "email": "sarah.yablok@lytics.io",
+    "email": "example@test.com",
     "emaildomains": [
-      "lytics.io"
+      "test.com"
     ],
     "emails": [
-      "sarah.yablok@lytics.io"
+      "example@test.com"
     ],
     "timezone": -7,
     "first_known_ts": "2016-05-03T19:08:07.607Z",
@@ -46,8 +46,8 @@
       "1605": 1
     }
   },
-  "userId": "sarah.yablok@lytics.io",
-  "event": "segment_entered",
+  "userId": "example@test.com",
+  "event": "segment_exited",
   "type": "track",
   "messageId": "6ab9746a-2d63-4e15-8ce1-e98cfe11cdf5",
   "timestamp": "2016-05-06T22:15:07.922Z",

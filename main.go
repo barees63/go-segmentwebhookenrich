@@ -23,9 +23,15 @@ type SegmentEvent struct {
 	Timestamp  time.Time              `json:"timestamp,omitempty"`
 }
 
+
 func init() {
 	router := pat.New()
-	router.Post("/post", http.HandlerFunc(enrichWebhook))
+	router.Post("/post", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		config.setClient(urlfetch.Client(ctx))
+		config.enrichWebhook(w, r, ctx)
+	}))
+
 	http.HandleFunc("/", router.ServeHTTP)
 }
 
@@ -33,11 +39,8 @@ func init() {
 // the Lytics + Segment integration format. It looks up content
 // recommendations for the user in the event, and sends this data
 // to a webhook. In this example, it sends a formatted webhook to
-// sparkpost to deploy which will email with the suggested content
-func enrichWebhook(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	client := urlfetch.Client(ctx)
-
+// sparkpost to deploy which will email the with content suggested for them
+func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appengine.Context) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", r.Method)
@@ -52,9 +55,9 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if event matches the expectation
-	if config.event != nil {
+	if c.event != nil {
 		// Check if event name matches
-		if config.event.name != "" && evt.EventName != config.event.name {
+		if c.event.name != "" && evt.EventName != c.event.name {
 			w.WriteHeader(204)
 			fmt.Fprintf(w, buildResponse(204, "not processed: event name did not match"))
 			return
@@ -62,7 +65,7 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 
 		// Check if segment name matches
 		friendlyName, ok := evt.Properties["_audience_friendly"].(string)
-		if config.event.segment != "" && ok && friendlyName != config.event.segment {
+		if c.event.segment != "" && ok && friendlyName != c.event.segment {
 			w.WriteHeader(204)
 			fmt.Fprintf(w, buildResponse(204, "not processed: segment name did not match"))
 			return
@@ -76,15 +79,16 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ly := lytics.NewLytics(config.lyticsAPIKey, nil)
-	ly.SetClient(client)
+	ly := lytics.NewLytics(c.lyticsAPIKey, nil)
+	ly.SetClient(c.client)
 
-	if config.recommendationFilter != "" {
-		config.recommendationFilter += " FROM content"
+	var filter string
+	if c.recommendationFilter != "" {
+		filter = c.recommendationFilter + " FROM content"
 	}
 
 	// Get recommended content for the user
-	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), config.recommendationFilter, 1, false)
+	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), filter, 3, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user"))
@@ -104,13 +108,13 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"content": map[string]string{
-			"template_id": config.sparkpostTemplateId,
+			"template_id": c.sparkpostTemplateId,
 		},
 	}
 
 	// Calculate the optimal time of day to send an email to this user
 	hourly, ok := evt.Properties["hourly"].(map[string]interface{})
-	if ok && config.getOptimalHour {
+	if ok && c.getOptimalHour {
 		if sendTime := getOptimalSendTime(hourly); sendTime != nil {
 			payload["options"] = map[string]interface{}{
 				"start_time": sendTime.Format(time.RFC3339),
@@ -126,15 +130,15 @@ func enrichWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", config.webhookUrl, bytes.NewReader(reqBody))
-	req.Header.Set("Authorization", config.sparkpostAPIKey)
+	req, err := http.NewRequest("POST", c.webhookUrl, bytes.NewReader(reqBody))
+	req.Header.Set("Authorization", c.sparkpostAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := c.client.Do(req)
 	defer resp.Body.Close()
 	if err != nil || resp.StatusCode != 200 {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "could not send send webhook"))
+		fmt.Fprintf(w, buildResponse(500, "could not send webhook"))
 		return
 	}
 
@@ -154,7 +158,7 @@ func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
 	for key, val := range hourly {
 		valInt := int(val.(float64))
 		if valInt > max {
-			max = int(val.(float64))
+			max = valInt
 			optimalHour, _ = strconv.Atoi(key)
 		}
 	}

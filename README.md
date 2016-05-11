@@ -26,7 +26,7 @@ In our example, we send this as the `start_time` to the sparkpost api, meaning t
 
 #### 4. event `*Event` (optional)
 
-Once your webhook integration is configured your Segment source will send *all incoming events* to this app. By setting the `event` field `name` and `segment` we can select which events we actually want to process. If not set, the app will try to process all events. 
+Once your webhook integration is configured your Segment source will send *all incoming events* to this app. By setting the `event` field `name` and `segment` we can select which events we actually want to process. If not set, the app will try to process all events. Currently the base code only filters one event, in the future it could be modified to recognize more.
 
 - **event.name** `string` - The name of the segment event. Using Lytics triggers this should be `segment_entered` or `segment_exited`.
 - **event.segment** `string` - The slug of the segment in Lytics (make sure API Access is enabled for the segment).

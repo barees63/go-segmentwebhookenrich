@@ -1,5 +1,7 @@
 package main
 
+import "net/http"
+
 type Config struct {
 	// required
 	lyticsAPIKey         string
@@ -11,6 +13,13 @@ type Config struct {
 	event                *Event
 	sparkpostTemplateId  string
 	sparkpostAPIKey      string
+	client               *http.Client
+}
+
+func (c *Config) setClient(client *http.Client) {
+	if c.client == nil {
+		c.client = client
+	}
 }
 
 type Event struct {
@@ -19,12 +28,11 @@ type Event struct {
 }
 
 var (
-	config = Config {
+	config = &Config {
 
 		// Lytics API Key 
 		// Found in the "Manage Accounts" page in Lytics
 		lyticsAPIKey: "LYTICS API KEY",
-
 
 		// URL to send webhook with recommendation data
 		webhookUrl: "https://api.sparkpost.com/api/v1/transmissions",
@@ -37,7 +45,7 @@ var (
 		// Filter for which content documents to recommend
 		// Can use '*' as wildcard. With multiple filters dictated by AND/OR logic
 		// See README.md for examples. Leave as empty string for no filter.
-		recommendationFilter: "FILTER AND (url LIKE \"www.example.com/*\")",
+		recommendationFilter: `FILTER AND (url LIKE "www.example.com/*")`,
 
 		// Filtering for which events to process.
 		// If you want to accept every event that comes through, do not set this field.
@@ -47,7 +55,7 @@ var (
 			name: "segment_entered",
 
 			// Name of segment should match API name of segment in Lytics
-			segment: "sample_segment_name",
+			segment: "sample_segment_name_2",
 		},
 
 		// Id of email template to send in SparkPost (optional for this example)
