@@ -1,47 +1,34 @@
 {
-  "anonymousId": "10412f19-c995-45cc-8cd0-8e76604a0b54",
-  "channel": "client",
   "context": {
-    "ip": "50.240.27.234",
+    "lytics-workid": "1d8a3dc4ed6c1fbe99349155fd937539",
+    "name": "analytics-go",
+    "version": "2.1.0",
     "library": {
-      "name": "analytics.js",
-      "version": "2.11.1"
-    },
-    "page": {
-      "path": "/",
-      "referrer": "",
-      "search": "",
-      "title": "Lytics: The Customer Data Platform Built for Marketers",
-      "url": "https://www.getlytics.com/"
-    },
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.94 Safari/537.36"
+      "name": "analytics-go",
+      "version": "2.1.0"
+    }
   },
-  "event": "segment_entered",
-  "integrations": {},
-  "messageId": "ajs-bded626e5841eedf9fd136f550e0f923",
-  "originalTimestamp": "2016-05-05T22:21:50.563Z",
-  "projectId": "IJdyFz3IHI",
   "properties": {
     "_audience": "87a91423e5bd4996ca4cb36593f1dcf3",
     "_audience_action": "entered",
-    "_audience_friendly": "pf_campaign_reach",
+    "_audience_friendly": "sample_segment_name",
     "channels": [
       "web"
     ],
     "city": "Vancouver",
     "country": "US",
     "created_ts": "2016-05-03T19:08:07.607Z",
-    "email": "sarah.yablok@getlytics.com",
+    "email": "sarah.yablok@lytics.io",
     "emaildomains": [
-      "getlytics.com"
+      "lytics.io"
     ],
     "emails": [
-      "sarah.yablok@getlytics.com"
+      "sarah.yablok@lytics.io"
     ],
     "timezone": -7,
     "first_known_ts": "2016-05-03T19:08:07.607Z",
     "hourly": {
-      "18": 1
+      "22": 1
     },
     "last_active_ts": "2016-05-03T19:08:07.607Z",
     "lastvisit_ts": "2016-05-03T19:08:07.607Z",
@@ -59,10 +46,14 @@
       "1605": 1
     }
   },
-  "receivedAt": "2016-05-05T22:21:50.514Z",
-  "sentAt": "2016-05-05T22:21:50.569Z",
-  "timestamp": "2016-05-05T22:21:50.508Z",
+  "userId": "sarah.yablok@lytics.io",
+  "event": "segment_entered",
   "type": "track",
-  "userId": null,
-  "version": 2
+  "messageId": "6ab9746a-2d63-4e15-8ce1-e98cfe11cdf5",
+  "timestamp": "2016-05-06T22:15:07.922Z",
+  "writeKey": "samplewritekey",
+  "sentAt": "2016-05-06T22:15:07.000Z",
+  "integrations": {},
+  "receivedAt": "2016-05-06T22:15:07.922Z",
+  "originalTimestamp": "2016-05-06T22:15:07+0000"
 }
