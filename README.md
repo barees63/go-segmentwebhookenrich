@@ -4,7 +4,7 @@ go-segmentwebhhokenrich is a Google App Engine app used to subscribe to a [Segme
 
 This app assumes you have a Lytics account, with at least one segment.com trigger export running to capture segment entered and exited events. To use this app, you should configure a webhooks integration on the segment.com source collecting these triggers. The webhook url should be the `[url of this app]/post`.
 
-In the example code provided, we send a formatted webhook to [SparkPost](https://www.sparkpost.com/) which will deploy an email (see [strater email template](https://github.com/lytics/go-segmentwebhookenrich/blob/initial/example-template.html) for how to use the data in sparkpost) to the user at their optimal activity time including the suggested content. The base code of this app is flexible and can be edited to send the enriched data to any url.
+In the example code provided, we send a formatted webhook to [SparkPost](https://www.sparkpost.com/) which will deploy an email (see [strater email template](https://github.com/lytics/go-segmentwebhookenrich/blob/master/starter-template.html) for how to use the data in sparkpost) to the user at their optimal activity time including the suggested content. The base code of this app is flexible and can be edited to send the enriched data to any url.
 
 ## Configuration
 
@@ -71,13 +71,17 @@ These are used in the base code as an example, if you are not sending your webho
 
 ## Testing
 
-Tests will be added soon.
+Test with:
+```sh
+goapp test -v
+```
 
+If you modify the webhook, the tests should be updated as well. They will only test the base code provided, using the sparkpost example.
 
 ## Customizing & Contributing
 
 Feel free to fork this repo and change it to suit your needs. You can change the [contents of the payload](https://github.com/lytics/go-segmentwebhookenrich/blob/master/main.go#L97) to match whatever format your endpoint expects. And [add the optimal time](https://github.com/lytics/go-segmentwebhookenrich/blob/master/main.go#L116) (returned from the `getOptimalHour` function) to the payload as you like.
 
-If you do not use App Engine, this code can be easily adopted into another environment, the main difference would be changing the [context and client](https://github.com/lytics/go-segmentwebhookenrich/blob/initial/main.go#L38).
+If you do not use App Engine, this code can be easily adopted into another environment, the main difference would be changing the [context and client](https://github.com/lytics/go-segmentwebhookenrich/blob/master/main.go#L38).
 
 If you find something you think could be improved in the base code you can contribute by creating a new issue, or submitting a pr for review.
