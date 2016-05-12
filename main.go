@@ -73,21 +73,15 @@ func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appen
 
 	// Email should exist
 	if _, ok := evt.Properties["email"]; !ok {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "user does not have email"))
+		w.WriteHeader(400)
+		fmt.Fprintf(w, buildResponse(400, "user does not have email"))
 		return
 	}
 
-	ly := lytics.NewLytics(c.lyticsAPIKey, nil)
-	ly.SetClient(c.client)
-
-	var filter string
-	if c.recommendationFilter != "" {
-		filter = c.recommendationFilter + " FROM content"
-	}
+	ly := lytics.NewLytics(c.lyticsAPIKey, nil, c.client)
 
 	// Get recommended content for the user
-	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), filter, 3, false)
+	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), c.recommendationFilter, 3, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user"))
@@ -112,9 +106,8 @@ func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appen
 	}
 
 	// Calculate the optimal time of day to send an email to this user
-	hourly, ok := evt.Properties["hourly"].(map[string]interface{})
-	if ok && c.getOptimalHour {
-		if sendTime := getOptimalSendTime(hourly); sendTime != nil {
+	if c.getOptimalHour {
+		if sendTime := evt.SendTime(); sendTime != nil {
 			payload["options"] = map[string]interface{}{
 				"start_time": sendTime.Format(time.RFC3339),
 			}
@@ -145,14 +138,20 @@ func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appen
 	fmt.Fprintf(w, buildResponse(200, "success"))
 }
 
-// getOptimalSendTime will look through the hourly data for the user
+// SendTime will look through the hourly data for the user
 // and find the highest activity hour of the day, it returns the
 // next time it will be the optimal hour for the user
-func getOptimalSendTime(hourly map[string]interface{}) *time.Time {
+func (e *SegmentEvent) SendTime() *time.Time {
 	var (
 		max         int
 		optimalHour int
 	)
+
+	hourly, ok := e.Properties["hourly"].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
 
 	for key, val := range hourly {
 		valInt := int(val.(float64))

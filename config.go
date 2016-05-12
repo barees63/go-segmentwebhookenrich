@@ -4,9 +4,9 @@ import "net/http"
 
 type Config struct {
 	// required
-	lyticsAPIKey         string
-	webhookUrl           string
-	getOptimalHour       bool
+	lyticsAPIKey   string
+	webhookUrl     string
+	getOptimalHour bool
 
 	// optional
 	recommendationFilter string
@@ -23,14 +23,14 @@ func (c *Config) setClient(client *http.Client) {
 }
 
 type Event struct {
-	name string
+	name    string
 	segment string
 }
 
 var (
-	config = &Config {
+	config = &Config{
 
-		// Lytics API Key 
+		// Lytics API Key
 		// Found in the "Manage Accounts" page in Lytics
 		lyticsAPIKey: "LYTICS API KEY",
 
@@ -45,7 +45,7 @@ var (
 		// Filter for which content documents to recommend
 		// Can use '*' as wildcard. With multiple filters dictated by AND/OR logic
 		// See README.md for examples. Leave as empty string for no filter.
-		recommendationFilter: `FILTER AND (url LIKE "www.example.com/*")`,
+		recommendationFilter: `FILTER AND (url LIKE "www.example.com/*") FROM content`,
 
 		// Filtering for which events to process.
 		// If you want to accept every event that comes through, do not set this field.
@@ -55,7 +55,7 @@ var (
 			name: "segment_entered",
 
 			// Name of segment should match API name of segment in Lytics
-			segment: "sample_segment_name_2",
+			segment: "sample_segment_name",
 		},
 
 		// Id of email template to send in SparkPost (optional for this example)

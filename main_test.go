@@ -88,17 +88,21 @@ func TestEnrichWebhook(t *testing.T) {
 	assert.Equal(t, postTest("segment_webhook_valid", inst, ctx), `{"message":"success","status":200}`)
 }
 
-func TestGetOptimalSendTime(t *testing.T) {
-	hourly := map[string]interface{}{
-		"0":  float64(583),
-		"1":  float64(414),
-		"14": float64(1),
-		"17": float64(721),
-		"18": float64(1140),
-		"23": float64(1138),
+func TestSendTime(t *testing.T) {
+	evt := &SegmentEvent{
+		Properties: map[string]interface{}{
+			"hourly": map[string]interface{}{
+				"0":  float64(583),
+				"1":  float64(414),
+				"14": float64(1),
+				"17": float64(721),
+				"18": float64(1140),
+				"23": float64(1138),
+			},
+		},
 	}
 
-	sendTime := getOptimalSendTime(hourly)
+	sendTime := evt.SendTime()
 	now := time.Now()
 
 	// current hour is not optimal

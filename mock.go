@@ -10,7 +10,7 @@ import (
 
 var (
 	mockLyticsKey  = "MockLyticsKey"
-	mockFilter     = "FILTER AND (url LIKE \"www.example.com/blog/*\")"
+	mockFilter     = "FILTER AND (url LIKE \"www.example.com/blog/*\") FROM content"
 	mockSpKey      = "MockSparkpostKey"
 	mockSpTemplate = "MockSparkpostTemplate"
 )
@@ -34,7 +34,7 @@ func registerMocks() {
 				return httpmock.NewStringResponse(401, string(readMockJson("lytics_unauthorized"))), nil
 			}
 
-			if queries.Get("ql") != mockFilter+" FROM content" {
+			if queries.Get("ql") != mockFilter {
 				return httpmock.NewStringResponse(200, string(readMockJson("lytics_invalid_filter"))), nil
 			}
 
