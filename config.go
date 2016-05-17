@@ -5,21 +5,18 @@ import "net/http"
 type Config struct {
 	// required
 	lyticsAPIKey   string
-	webhookUrl     string
+	webhook        string
+	webhooks       map[string]map[string]string
 	getOptimalHour bool
 
 	// optional
 	recommendationFilter string
 	event                *Event
-	sparkpostTemplateId  string
-	sparkpostAPIKey      string
 	client               *http.Client
 }
 
 func (c *Config) setClient(client *http.Client) {
-	if c.client == nil {
-		c.client = client
-	}
+	c.client = client
 }
 
 type Event struct {
@@ -34,8 +31,28 @@ var (
 		// Found in the "Manage Accounts" page in Lytics
 		lyticsAPIKey: "LYTICS API KEY",
 
-		// URL to send webhook with recommendation data
-		webhookUrl: "https://api.sparkpost.com/api/v1/transmissions",
+		// key of the webhook we'd like to use from the
+		// webhooks map below
+		webhook: "sparkpost",
+
+		// Map of possible webhook endpoints to use in the
+		webhooks: map[string]map[string]string{
+
+			// This is the default webhook we use in the base code,
+			// it sends a transmission to sparkpost, which will deploy an email.
+			"sparkpost": map[string]string{
+
+				// SparkPost API Key
+				// Can generate a new SparkPost key under Account > API Keys in Sparkpost
+				"apikey": "SPARKPOST API KEY",
+
+				// URL to send webhook with recommendation data
+				"url": "https://api.sparkpost.com/api/v1/transmissions",
+
+				// Id of email template to send in SparkPost
+				"template": "SPARKPOST TEMPLATE ID",
+			},
+		},
 
 		// If the user has hourly activity data in Lytics, and this flag is set to true,
 		// we will look at the user's past activity and wait and compute the next optimal activity
@@ -57,12 +74,5 @@ var (
 			// Name of segment should match API name of segment in Lytics
 			segment: "sample_segment_name",
 		},
-
-		// Id of email template to send in SparkPost (optional for this example)
-		sparkpostTemplateId: "SPARKPOST TEMPLATE ID",
-
-		// SparkPost API Key (optional for this example)
-		// Can generate a new SparkPost key under Account > API Keys in Sparkpost
-		sparkpostAPIKey: "SPARKPOST API KEY",
 	}
 )

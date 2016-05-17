@@ -81,61 +81,75 @@ func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appen
 	ly := lytics.NewLytics(c.lyticsAPIKey, nil, c.client)
 
 	// Get recommended content for the user
-	recs, err := ly.GetUserContentRecommendation("emails", evt.Properties["email"].(string), c.recommendationFilter, 3, false)
+	recs, err := ly.GetUserContentRecommendation("email", evt.Properties["email"].(string), c.recommendationFilter, 3, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user"))
 		return
 	}
 
-	// Format your webhook however you like with our data this
-	// example formulates a webhook which we send to sparkpost to
-	// deploy an email to this user
-	payload := map[string]interface{}{
-		"recipients": []map[string]interface{}{
-			map[string]interface{}{
-				"address": evt.Properties["email"].(string),
-				"substitution_data": map[string]interface{}{
-					"data": recs[0],
-				},
-			},
-		},
-		"content": map[string]string{
-			"template_id": c.sparkpostTemplateId,
-		},
-	}
+	payload := c.PrepPayload(evt, recs[0])
 
-	// Calculate the optimal time of day to send an email to this user
-	if c.getOptimalHour {
-		if sendTime := evt.SendTime(); sendTime != nil {
-			payload["options"] = map[string]interface{}{
-				"start_time": sendTime.Format(time.RFC3339),
-			}
-		}
-	}
-
-	// Send the payload data as a webhook
-	reqBody, err := json.Marshal(payload)
+	err = c.MakeRequest(payload)
 	if err != nil {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "invalid outgoing webhook body"))
-		return
-	}
-
-	req, err := http.NewRequest("POST", c.webhookUrl, bytes.NewReader(reqBody))
-	req.Header.Set("Authorization", c.sparkpostAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.client.Do(req)
-	defer resp.Body.Close()
-	if err != nil || resp.StatusCode != 200 {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, buildResponse(500, "could not send webhook"))
+		fmt.Fprintf(w, buildResponse(500, fmt.Sprintf("%s", err)))
 		return
 	}
 
 	w.WriteHeader(200)
 	fmt.Fprintf(w, buildResponse(200, "success"))
+}
+
+// PrepPayload formats the payload for the webhook to include
+// the recommendation data and optimal hour. This payload can
+// be reformatted for any endpoint
+func (c *Config) PrepPayload(e *SegmentEvent, data lytics.Recommendation) map[string]interface{} {
+	// This payload is formatted for the sparkpost api
+	payload := map[string]interface{}{
+		"recipients": []map[string]interface{}{
+			map[string]interface{}{
+				"address": e.Properties["email"].(string),
+				"substitution_data": map[string]interface{}{
+					"data": data,
+				},
+			},
+		},
+		"content": map[string]string{
+			"template_id": c.webhooks[c.webhook]["template"],
+		},
+	}
+
+	// Calculate the optimal time of day to send an email to this user
+	if c.getOptimalHour {
+		if sendTime := e.SendTime(); sendTime != nil {
+			payload["options"] = map[string]interface{}{
+				"start_time": sendTime.Format(time.RFC3339),
+			}
+		}
+	}
+	return payload
+}
+
+// MakeRequest accepts a payload for the webhook and sends the POST
+// request to the url specified in the config
+func (c *Config) MakeRequest(payload map[string]interface{}) error {
+	// Send the payload data as a webhook
+	reqBody, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("invalid outgoing webhook body")
+	}
+
+	req, err := http.NewRequest("POST", c.webhooks[c.webhook]["url"], bytes.NewReader(reqBody))
+	req.Header.Set("Authorization", c.webhooks[c.webhook]["apikey"])
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	defer resp.Body.Close()
+	if err != nil || resp.StatusCode != 200 {
+		return fmt.Errorf("could not send webhook")
+	}
+	return nil
 }
 
 // SendTime will look through the hourly data for the user

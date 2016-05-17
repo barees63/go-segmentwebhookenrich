@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/bmizerany/assert"
 	"github.com/jarcoal/httpmock"
+	lytics "github.com/lytics/go-lytics"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -15,16 +16,21 @@ import (
 
 var (
 	testConfig = &Config{
-		lyticsAPIKey:         mockLyticsKey,
-		webhookUrl:           "https://api.sparkpost.com/api/v1/transmissions",
+		lyticsAPIKey: mockLyticsKey,
+		webhook:      "sparkpost",
+		webhooks: map[string]map[string]string{
+			"sparkpost": {
+				"url":      "https://api.sparkpost.com/api/v1/transmissions",
+				"apikey":   mockSpKey,
+				"template": mockSpTemplate,
+			},
+		},
 		getOptimalHour:       true,
 		recommendationFilter: mockFilter,
 		event: &Event{
 			name:    "segment_entered",
 			segment: "MockSegmentName",
 		},
-		sparkpostTemplateId: mockSpTemplate,
-		sparkpostAPIKey:     mockSpKey,
 	}
 )
 
@@ -71,21 +77,96 @@ func TestEnrichWebhook(t *testing.T) {
 
 	fmt.Println("+++ lytics content recommendation error handling verified")
 
+	webhook := testConfig.webhooks[testConfig.webhook]
+
 	// Test Sparkpost deploy  - REMOVE IF USING CUSTOM WEBHOOK
 	// bad Sparkpost API key
-	testConfig.sparkpostAPIKey = "BadSpMockKey"
+	webhook["apikey"] = "BadSpMockKey"
 	assert.Equal(t, postTest("segment_webhook_valid", inst, ctx), `{"message":"could not send webhook","status":500}`)
-	testConfig.sparkpostAPIKey = mockSpKey
+	webhook["apikey"] = mockSpKey
 
 	// bad template name
-	testConfig.sparkpostTemplateId = "bad-template"
+	webhook["template"] = "bad-template"
 	assert.Equal(t, postTest("segment_webhook_valid", inst, ctx), `{"message":"could not send webhook","status":500}`)
-	testConfig.sparkpostTemplateId = mockSpTemplate
+	webhook["template"] = mockSpTemplate
 
 	fmt.Println("+++ sparkpost email error handling verified")
 
 	// success
 	assert.Equal(t, postTest("segment_webhook_valid", inst, ctx), `{"message":"success","status":200}`)
+}
+
+func TestPrepPayload(t *testing.T) {
+	evt := &SegmentEvent{
+		Properties: map[string]interface{}{
+			"email": "test@example.com",
+			"hourly": map[string]interface{}{
+				"7": float64(1),
+			},
+		},
+	}
+
+	data := lytics.Recommendation{
+		Document: &lytics.Document{
+			Url:         "www.example.com/blog/post/1",
+			Title:       "Title of Blog Post",
+			Description: "this is a mock blog post",
+		},
+		Confidence: 0.7654,
+		Visited:    false,
+	}
+
+	payload := testConfig.PrepPayload(evt, data)
+
+	recipients, _ := payload["recipients"].([]map[string]interface{})
+	assert.Equal(t, recipients[0]["address"], evt.Properties["email"])
+
+	substitution, _ := recipients[0]["substitution_data"].(map[string]interface{})
+	assert.Equal(t, substitution["data"], data)
+
+	content, _ := payload["content"].(map[string]string)
+	assert.Equal(t, content["template_id"], testConfig.webhooks[testConfig.webhook]["template"])
+
+	options, ok := payload["options"].(map[string]interface{})
+	if time.Now().Hour() != 7 {
+		assert.Equal(t, options["start_time"], evt.SendTime().Format(time.RFC3339))
+	} else {
+		assert.Equal(t, ok, false)
+	}
+
+	fmt.Println("+++ PrepPayload verified")
+}
+
+func TestMakeRequest(t *testing.T) {
+	ctx, err := aetest.NewContext(nil)
+	assert.Equal(t, err, nil)
+	testConfig.setClient(urlfetch.Client(ctx))
+	defer ctx.Close()
+
+	httpmock.ActivateNonDefault(testConfig.client)
+	registerMocks()
+	defer httpmock.DeactivateAndReset()
+
+	payload := map[string]interface{}{
+		"recipients": []map[string]interface{}{
+			map[string]interface{}{
+				"address": "test@example.com",
+			},
+		},
+		"content": map[string]string{
+			"template_id": testConfig.webhooks[testConfig.webhook]["template"],
+		},
+	}
+
+	webhook := testConfig.webhooks[testConfig.webhook]
+
+	webhook["apikey"] = "BadSpMockKey"
+	err = testConfig.MakeRequest(payload)
+	assert.NotEqual(t, err, nil)
+	webhook["apikey"] = mockSpKey
+
+	err = testConfig.MakeRequest(payload)
+	assert.Equal(t, err, nil)
 }
 
 func TestSendTime(t *testing.T) {
