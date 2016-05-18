@@ -27,7 +27,7 @@ func init() {
 	router := pat.New()
 	router.Post("/post", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
-		config.setClient(urlfetch.Client(ctx))
+		config.SetClient(urlfetch.Client(ctx))
 		config.enrichWebhook(w, r, ctx)
 	}))
 

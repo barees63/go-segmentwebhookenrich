@@ -44,7 +44,7 @@ func postTest(filename string, inst aetest.Instance, ctx appengine.Context) stri
 func TestEnrichWebhook(t *testing.T) {
 	ctx, err := aetest.NewContext(nil)
 	assert.Equal(t, err, nil)
-	testConfig.setClient(urlfetch.Client(ctx))
+	testConfig.SetClient(urlfetch.Client(ctx))
 	defer ctx.Close()
 
 	inst, err := aetest.NewInstance(nil)
@@ -52,7 +52,7 @@ func TestEnrichWebhook(t *testing.T) {
 	defer inst.Close()
 
 	httpmock.ActivateNonDefault(testConfig.client)
-	registerMocks()
+	RegisterMocks()
 	defer httpmock.DeactivateAndReset()
 
 	// Test event matching
@@ -140,11 +140,11 @@ func TestPrepPayload(t *testing.T) {
 func TestMakeRequest(t *testing.T) {
 	ctx, err := aetest.NewContext(nil)
 	assert.Equal(t, err, nil)
-	testConfig.setClient(urlfetch.Client(ctx))
+	testConfig.SetClient(urlfetch.Client(ctx))
 	defer ctx.Close()
 
 	httpmock.ActivateNonDefault(testConfig.client)
-	registerMocks()
+	RegisterMocks()
 	defer httpmock.DeactivateAndReset()
 
 	payload := map[string]interface{}{
@@ -167,6 +167,7 @@ func TestMakeRequest(t *testing.T) {
 
 	err = testConfig.MakeRequest(payload)
 	assert.Equal(t, err, nil)
+	fmt.Println("+++ MakeRequest verified")
 }
 
 func TestSendTime(t *testing.T) {
@@ -198,5 +199,5 @@ func TestSendTime(t *testing.T) {
 		assert.Equal(t, sendTime, nil)
 	}
 
-	fmt.Println("+++ getOptimalSendTime verified")
+	fmt.Println("+++ SendTime verified")
 }

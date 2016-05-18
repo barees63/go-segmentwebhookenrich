@@ -15,7 +15,7 @@ type Config struct {
 	client               *http.Client
 }
 
-func (c *Config) setClient(client *http.Client) {
+func (c *Config) SetClient(client *http.Client) {
 	c.client = client
 }
 

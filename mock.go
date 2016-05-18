@@ -24,7 +24,7 @@ func readMockJson(name string) []byte {
 	return json
 }
 
-func registerMocks() {
+func RegisterMocks() {
 	// Lytics Recommendation API Mock
 	httpmock.RegisterResponder("GET", "https://api.lytics.io/api/content/recommend/user/email/example@test.com",
 		func(req *http.Request) (*http.Response, error) {
