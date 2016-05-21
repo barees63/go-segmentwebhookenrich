@@ -1,0 +1,59 @@
+{
+  "context": {
+    "lytics-workid": "1d8a3dc4ed6c1fbe99349155fd937539",
+    "name": "analytics-go",
+    "version": "2.1.0",
+    "library": {
+      "name": "analytics-go",
+      "version": "2.1.0"
+    }
+  },
+  "properties": {
+    "_audience": "87a91423e5bd4996ca4cb36593f1dcf3",
+    "_audience_action": "exited",
+    "_audience_friendly": "MockSegmentName",
+    "channels": [
+      "web"
+    ],
+    "city": "Vancouver",
+    "country": "US",
+    "created_ts": "2016-05-03T19:08:07.607Z",
+    "email": "example@test.com",
+    "emaildomains": [
+      "test.com"
+    ],
+    "emails": [
+      "example@test.com"
+    ],
+    "timezone": -7,
+    "first_known_ts": "2016-05-03T19:08:07.607Z",
+    "hourly": {
+      "22": 1
+    },
+    "last_active_ts": "2016-05-03T19:08:07.607Z",
+    "lastvisit_ts": "2016-05-03T19:08:07.607Z",
+    "lead_modal_content_1_click": false,
+    "org": "Comcast Cable",
+    "region": "WA",
+    "score_frequency": 100,
+    "score_intensity": 0,
+    "score_momentum": 100,
+    "score_propensity": 0,
+    "score_quantity": 0,
+    "score_recency": 100,
+    "signupmonth": 1605,
+    "yymm": {
+      "1605": 1
+    }
+  },
+  "userId": "example@test.com",
+  "event": "segment_exited",
+  "type": "track",
+  "messageId": "6ab9746a-2d63-4e15-8ce1-e98cfe11cdf5",
+  "timestamp": "2016-05-06T22:15:07.922Z",
+  "writeKey": "samplewritekey",
+  "sentAt": "2016-05-06T22:15:07.000Z",
+  "integrations": {},
+  "receivedAt": "2016-05-06T22:15:07.922Z",
+  "originalTimestamp": "2016-05-06T22:15:07+0000"
+}

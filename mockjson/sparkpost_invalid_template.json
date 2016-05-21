@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "Subresource not found",
+      "description": "template 'bad-template' does not exist",
+      "code": "1603"
+    }
+  ]
+}
