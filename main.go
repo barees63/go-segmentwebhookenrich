@@ -81,7 +81,7 @@ func (c *Config) enrichWebhook(w http.ResponseWriter, r *http.Request, ctx appen
 	ly := lytics.NewLytics(c.lyticsAPIKey, nil, c.client)
 
 	// Get recommended content for the user
-	recs, err := ly.GetUserContentRecommendation("email", evt.Properties["email"].(string), c.recommendationFilter, 3, false)
+	recs, err := ly.GetUserContentRecommendation("email", evt.Properties["email"].(string), c.recommendationFilter, 0, false)
 	if err != nil || len(recs) == 0 {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, buildResponse(500, "could not get recommendation for this user"))
